@@ -1,48 +1,52 @@
 require 'mechanize'
 require 'pry'
 require 'csv'
-# require './locator.rb'
+require_relative 'locator'
 
-Job=Struct.new(:title,:company,:link, :location)
+Job=Struct.new(:title,:company,:link,:location)
 
 class Scraper
 
-  def initialize(keyword)
+  def initialize(keyword,city=nil)
     @jobarray=[]
 
     scraper= Mechanize.new
     scraper.history_added = Proc.new { sleep 0.5 }
 
     page=scraper.get("http://www.dice.com/")
-    result=page.input_with(:id=>'search-field-keyword')
+    result=page.form_with(:id=>'search-form')
     result.q=keyword
-    # result_location = page.form_with(:id =>'search-field-location')
-    # result_location.q='Calgary'
-    # button = page.form_with(:class => 'btn btn-primary') 
 
-    result_page = scraper.submit(submit)
+    if city==nil
+    locator=Locator.new
+    city=locator.location["city"]
+    end
 
-    page.links_with(:href => /detail/).each do |link|
-      if @jobarray.size >1
+    result.l=city
+    result_page = scraper.submit(result)
+
+    result_page.links_with(:href => /detail/).each do |link|
+
+     if @jobarray.size >1
         break
       else
       current_job=Job.new
       current_job.title=link.text.strip
 
-      description_page=link.click
-      holder =description_page.link_with(:href => /company/) 
+      description_result_page=link.click
+      holder =description_result_page.link_with(:href => /company/) 
       current_job.company=holder.text
       current_job.link=link
-      current_job.location = description_page.search("li.location").text
+      current_job.location = description_result_page.search("li.location").text
       @jobarray<<current_job
       end
     end
   end
 
-  def returnjobs
+  def return_job_array
     @jobarray
   end
 end
 
-s = Scraper.new("accounting")
-puts s.returnjobs
+scraper=Scraper.new('engineer','toronto')
+puts scraper.return_job_array

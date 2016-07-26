@@ -1,17 +1,16 @@
 require 'httparty'
 
 class Locator
-
-  def initalize(ip_address)
+  attr_accessor :location
+  def initialize(ip_address=nil)
     @ip_address = ip_address
+    find_ip
   end
 
   def find_ip 
     ip_lookup = HTTParty.get("http://ip-api.com/json/#{@ip_address}")
-    location = {"country" => find_country(ip_lookup), 
-      "region" => find_region(ip_lookup), 
-      "city" => find_city(ip_lookup) }
-    puts location
+    @location={"country"=>find_country(ip_lookup),"region"=>find_region(ip_lookup),"city"=>find_city(ip_lookup)}
+
   end
 
   def find_country(ip_lookup)
@@ -27,6 +26,3 @@ class Locator
   end
 
 end
-
-l = Locator.new
-l.find_ip
