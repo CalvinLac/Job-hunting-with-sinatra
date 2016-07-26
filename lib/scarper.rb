@@ -1,8 +1,9 @@
 require 'mechanize'
 require 'pry'
 require 'csv'
+# require './locator.rb'
 
-Job=Struct.new(:title,:company,:link)
+Job=Struct.new(:title,:company,:link, :location)
 
 class Scraper
 
@@ -13,13 +14,16 @@ class Scraper
     scraper.history_added = Proc.new { sleep 0.5 }
 
     page=scraper.get("http://www.dice.com/")
-    result=page.form_with(:id=>'search-form')
+    result=page.input_with(:id=>'search-field-keyword')
     result.q=keyword
+    # result_location = page.form_with(:id =>'search-field-location')
+    # result_location.q='Calgary'
+    # button = page.form_with(:class => 'btn btn-primary') 
 
-    page = scraper.submit(result)
+    result_page = scraper.submit(submit)
 
     page.links_with(:href => /detail/).each do |link|
-      if @jobarray.size >3
+      if @jobarray.size >1
         break
       else
       current_job=Job.new
@@ -29,6 +33,7 @@ class Scraper
       holder =description_page.link_with(:href => /company/) 
       current_job.company=holder.text
       current_job.link=link
+      current_job.location = description_page.search("li.location").text
       @jobarray<<current_job
       end
     end
@@ -38,3 +43,6 @@ class Scraper
     @jobarray
   end
 end
+
+s = Scraper.new("accounting")
+puts s.returnjobs
