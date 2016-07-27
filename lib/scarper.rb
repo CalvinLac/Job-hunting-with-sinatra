@@ -7,7 +7,7 @@ Job=Struct.new(:title,:company,:link,:location)
 
 class Scraper
 
-  def initialize(keyword,city=nil)
+  def initialize(keyword,city)
     @jobarray=[]
 
     scraper= Mechanize.new
@@ -27,18 +27,18 @@ class Scraper
 
     result_page.links_with(:href => /detail/).each do |link|
 
-     if @jobarray.size >1
-        break
-      else
-      current_job=Job.new
-      current_job.title=link.text.strip
+      if @jobarray.size >3
+          break
+        else
+        current_job=Job.new
+        current_job.title=link.text.strip
 
-      description_result_page=link.click
-      holder =description_result_page.link_with(:href => /company/) 
-      current_job.company=holder.text
-      current_job.link=link
-      current_job.location = description_result_page.search("li.location").text
-      @jobarray<<current_job
+        description_result_page=link.click
+        holder =description_result_page.link_with(:href => /company/) 
+        current_job.company=holder.text
+        current_job.link=link
+        current_job.location = description_result_page.search("li.location").text
+        @jobarray<<current_job
       end
     end
   end
@@ -46,7 +46,5 @@ class Scraper
   def return_job_array
     @jobarray
   end
+  
 end
-
-scraper=Scraper.new('engineer','toronto')
-puts scraper.return_job_array
